@@ -1,120 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <base target="_top">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานผลการเรียนแพทย์</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { padding: 30px; background-color: #f0f2f5; font-family: 'Chakra Petch', sans-serif; }
-        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .search-box { background: #e9ecef; border-radius: 10px; padding: 20px; margin-bottom: 25px; }
+        body { padding: 20px; background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .badge-grade { width: 40px; display: inline-block; text-align: center; font-size: 1.1rem; }
         .grade-A { color: #28a745; font-weight: bold; }
         .grade-F { color: #dc3545; font-weight: bold; }
-        .table thead { background-color: #0d6efd; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="m-0">🏥 ระบบสรุปผลการเรียนนิสิตแพทย์</h2>
-        <span class="badge bg-info text-dark">อัปเดตเรียลไทม์</span>
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h2 class="m-0 text-primary">🏥 MedGrade Dashboard</h2>
     </div>
 
-    <div class="search-box">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label fw-bold">🔎 ค้นหาด้วยรหัสนิสิต หรือ ชื่อ</label>
-                <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="ระบุรหัส 8 หลัก หรือชื่อ-นามสกุล..." onkeyup="filterTable()">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold">📅 ปีการศึกษา</label>
-                <select id="yearFilter" class="form-select form-select-lg" onchange="filterTable()">
-                    <option value="">ทั้งหมด</option>
-                    <option value="2566">2566</option>
-                    <option value="2567">2567</option>
-                </select>
-            </div>
-            <div class="col-md-3 text-end d-flex align-items-end">
-                <button onclick="loadData()" class="btn btn-outline-primary btn-lg w-100">🔄 ดึงข้อมูลใหม่</button>
-            </div>
+    <div class="card bg-light mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">➕ เพิ่มข้อมูลผลการเรียน (ส่งเข้า Google Sheets)</h5>
+            <form id="gradeForm" onsubmit="saveData(event)">
+                <div class="row g-2">
+                    <div class="col-md-2"><input type="text" id="sId" class="form-control" placeholder="รหัสนิสิต" required></div>
+                    <div class="col-md-3"><input type="text" id="sName" class="form-control" placeholder="ชื่อ-นามสกุล" required></div>
+                    <div class="col-md-2"><input type="text" id="cCode" class="form-control" placeholder="รหัสวิชา" required></div>
+                    <div class="col-md-2"><input type="text" id="cName" class="form-control" placeholder="ชื่อรายวิชา" required></div>
+                    <div class="col-md-1"><input type="text" id="year" class="form-control" placeholder="ปี" required></div>
+                    <div class="col-md-1"><input type="text" id="group" class="form-control" placeholder="กลุ่ม" required></div>
+                    <div class="col-md-1"><input type="text" id="grade" class="form-control" placeholder="เกรด" required></div>
+                </div>
+                <button type="submit" class="btn btn-success mt-3" id="saveBtn">บันทึกข้อมูล</button>
+            </form>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover border">
-            <thead>
-                <tr>
-                    <th>รหัสวิชา</th>
-                    <th>ชื่อรายวิชา</th>
-                    <th>นิสิต</th>
-                    <th>ชั้นปี / กลุ่ม</th>
-                    <th class="text-center">ผลการเรียน</th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
-                <tr><td colspan="5" class="text-center p-5">กรุณารอสักครู่ กำลังเชื่อมต่อฐานข้อมูลชีต...</td></tr>
-            </tbody>
-        </table>
+    <div class="d-flex justify-content-between mb-3">
+        <input type="text" id="searchInput" class="form-control w-50" placeholder="🔍 ค้นหารหัสนิสิต หรือ ชื่อวิชา..." onkeyup="filterTable()">
+        <button onclick="loadData()" class="btn btn-primary">🔄 รีเฟรชดึงข้อมูลจากชีต</button>
     </div>
+
+    <table class="table table-hover border">
+        <thead class="table-dark">
+            <tr>
+                <th>วิชา</th>
+                <th>นิสิต</th>
+                <th>ชั้นปี / กลุ่ม</th>
+                <th class="text-center">ผลการเรียน</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <tr><td colspan="4" class="text-center p-4">กำลังดึงข้อมูลจาก Google Sheets...</td></tr>
+        </tbody>
+    </table>
 </div>
 
 <script>
-    let rawData = []; // เก็บข้อมูลต้นฉบับไว้กรอง
+    // 🚩 สำคัญที่สุด: วาง Web App URL ที่ได้จาก Apps Script ตรงนี้
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxIfTFlKg-sZyC-7UUWJ4RvkVhLyiULIgSeMCCSbgZzD8tQBVabmLIBK2VTPUQC05yFA/exec";
+    
+    let rawData = [];
 
-    // โหลดข้อมูลเมื่อเปิดหน้าจอ
+    // ดึงข้อมูลเมื่อเปิดหน้าเว็บ
     window.onload = loadData;
 
-    function loadData() {
-        document.getElementById('table-body').innerHTML = '<tr><td colspan="5" class="text-center p-5 text-primary">🔄 กำลังโหลดข้อมูล...</td></tr>';
-        google.script.run.withSuccessHandler(data => {
+    // ฟังก์ชันดึงข้อมูล (Read)
+    async function loadData() {
+        document.getElementById('table-body').innerHTML = '<tr><td colspan="4" class="text-center p-4">กำลังเชื่อมต่อฐานข้อมูล...</td></tr>';
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const data = await response.json();
             rawData = data;
             renderTable(data);
-        }).getGradesData();
+        } catch (error) {
+            document.getElementById('table-body').innerHTML = '<tr><td colspan="4" class="text-center text-danger">เกิดข้อผิดพลาดในการเชื่อมต่อ</td></tr>';
+        }
     }
 
+    // ฟังก์ชันวาดตาราง
     function renderTable(data) {
         const tbody = document.getElementById('table-body');
-        tbody.innerHTML = ''; 
-
+        tbody.innerHTML = '';
         if(data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5">ไม่พบข้อมูลผลการเรียน</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">ไม่พบข้อมูล</td></tr>';
             return;
         }
-
         data.forEach(item => {
-            // เลือกสีเกรด (Medical Context: S/U หรือ A-F)
-            let gradeClass = item.grade === 'F' || item.grade === 'U' ? 'grade-F' : 'grade-A';
-            
+            let gradeClass = (item.grade === 'F' || item.grade === 'U') ? 'grade-F' : 'grade-A';
             const row = `<tr>
-                <td class="fw-bold text-primary">${item.courseCode}</td>
-                <td>${item.courseName}</td>
-                <td>
-                    <div class="fw-bold">${item.name}</div>
-                    <small class="text-muted">${item.studentId}</small>
-                </td>
-                <td>ปี ${item.year} <span class="badge bg-light text-dark border">กลุ่ม ${item.group}</span></td>
+                <td><span class="fw-bold text-primary">${item.courseCode}</span><br>${item.courseName}</td>
+                <td><span class="fw-bold">${item.name}</span><br><small class="text-muted">${item.studentId}</small></td>
+                <td>ปี ${item.year} (กลุ่ม ${item.group})</td>
                 <td class="text-center"><span class="badge-grade ${gradeClass}">${item.grade}</span></td>
             </tr>`;
             tbody.innerHTML += row;
         });
     }
 
-    // ฟังก์ชันกรองข้อมูล (ทำให้ดูง่ายและเร็ว)
-    function filterTable() {
-        const searchText = document.getElementById('searchInput').value.toLowerCase();
-        const yearValue = document.getElementById('yearFilter').value;
-        
-        const filtered = rawData.filter(item => {
-            const matchesSearch = item.name.toLowerCase().includes(searchText) || 
-                                 item.studentId.toString().includes(searchText) ||
-                                 item.courseName.toLowerCase().includes(searchText);
-            const matchesYear = yearValue === "" || item.year.toString() === yearValue;
+    // ฟังก์ชันบันทึกข้อมูล (Write)
+    async function saveData(event) {
+        event.preventDefault(); // ป้องกันเว็บโหลดใหม่
+        const btn = document.getElementById('saveBtn');
+        btn.innerHTML = "กำลังบันทึก...";
+        btn.disabled = true;
+
+        // ดึงข้อมูลจากฟอร์ม
+        const payload = {
+            studentId: document.getElementById('sId').value,
+            name: document.getElementById('sName').value,
+            courseCode: document.getElementById('cCode').value,
+            courseName: document.getElementById('cName').value,
+            year: document.getElementById('year').value,
+            group: document.getElementById('group').value,
+            grade: document.getElementById('grade').value
+        };
+
+        try {
+            // ส่งข้อมูลไป Apps Script แบบ POST
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                // ใช้ text/plain เพื่อหลีกเลี่ยงปัญหา CORS เมื่อเปิดไฟล์จากเครื่องตัวเอง
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
             
-            return matchesSearch && matchesYear;
-        });
-        
+            alert('บันทึกข้อมูลลง Google Sheets สำเร็จ!');
+            document.getElementById('gradeForm').reset();
+            loadData(); // โหลดข้อมูลใหม่มาแสดงทันที
+        } catch (error) {
+            alert('เกิดข้อผิดพลาด!');
+        } finally {
+            btn.innerHTML = "บันทึกข้อมูล";
+            btn.disabled = false;
+        }
+    }
+
+    // ฟังก์ชันค้นหา
+    function filterTable() {
+        const text = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = rawData.filter(i => i.studentId.toLowerCase().includes(text) || i.courseName.toLowerCase().includes(text));
         renderTable(filtered);
     }
 </script>
