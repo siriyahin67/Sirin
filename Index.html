@@ -1,129 +1,46 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบจัดการเกรด</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f4f8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        /* --- สไตล์ของหน้า Login (เหมือนเดิม) --- */
-        .login-container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
-        }
-        button {
-            width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 15px;
-        }
-        button:hover { background-color: #2980b9; }
-        
-        /* --- สไตล์ของหน้า Dashboard (เพิ่มใหม่) --- */
-        #dashboard {
-            width: 100%; max-width: 800px; padding: 20px; align-self: flex-start; margin-top: 50px;
-        }
-        .panel {
-            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 20px;
-        }
-        .logout-btn {
-            background-color: #e74c3c; width: auto; padding: 8px 15px; margin-top: 0; float: right;
-        }
-        .logout-btn:hover { background-color: #c0392b; }
-        .menu-list {
-            list-style-type: none; padding: 0;
-        }
-        .menu-list li {
-            padding: 15px; background: #ecf0f1; margin-bottom: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; color: #2c3e50; transition: 0.3s;
-        }
-        .menu-list li:hover { background: #dcdde1; }
-    </style>
+    <title>ระบบกรอกคะแนน</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container"> <span class="navbar-brand">Admin: ระบบจัดการเกรด</span> </div>
+    </nav>
 
-    <div class="login-container" id="loginForm">
-        <h2 style="color: #2c3e50;">ระบบจัดการเกรด<br>นิสิตแพทย์</h2>
-        <input type="text" id="username" placeholder="ชื่อผู้ใช้งาน (Username)">
-        <input type="password" id="password" placeholder="รหัสผ่าน (Password)">
-        <button onclick="doLogin()" id="loginBtn">เข้าสู่ระบบ</button>
-        <div id="message" style="margin-top: 15px; font-weight: bold;"></div>
-    </div>
-
-    <div id="dashboard" style="display: none;">
-        <button class="logout-btn" onclick="location.reload()">ออกจากระบบ</button>
-        <h2 id="welcomeText" style="color: #2c3e50;">ยินดีต้อนรับ</h2>
-        <p id="roleText" style="color: #7f8c8d;"></p>
-
-        <div id="adminPanel" class="panel" style="display: none;">
-            <h3>🛠️ เมนูผู้ดูแลระบบ (Admin)</h3>
-            <ul class="menu-list">
-                <li>1. จัดการรายวิชาและกลุ่ม</li>
-                <li>2. ตั้งค่าเกณฑ์คะแนน (MPL / MAX)</li>
-                <li>3. อัปโหลดและจัดการรายชื่อนิสิต</li>
-            </ul>
+    <div class="container mt-4">
+        <div class="list-group">
+            <button class="list-group-item" onclick="showPage('subject')">หน้ารายวิชา</button>
+            <button class="list-group-item" onclick="showPage('evaluation')">ตั้งค่าหัวข้อการประเมิน (% / MPL)</button>
+            <button class="list-group-item" onclick="showPage('grading')">ตั้งค่าอันตรภาคชั้น</button>
         </div>
 
-        <div id="teacherPanel" class="panel" style="display: none;">
-            <h3>👨‍🏫 รายวิชาที่รับผิดชอบ</h3>
-            <ul class="menu-list">
-                <li>📌 อายุรศาสตร์ (กลุ่ม A) - รอลงคะแนน</li>
-                <li>📌 ศัลยศาสตร์ (กลุ่ม B) - รอลงคะแนน</li>
-                </ul>
+        <div id="subject-page" class="mt-4" style="display:none;">
+            <h3>จัดการรายวิชา</h3>
+            <input type="text" id="subjName" placeholder="ชื่อรายวิชา" class="form-control mb-2">
+            <button onclick="saveData()" class="btn btn-success">บันทึก</button>
         </div>
     </div>
 
     <script>
-        function doLogin() {
-            var user = document.getElementById("username").value;
-            var pass = document.getElementById("password").value;
-            var btn = document.getElementById("loginBtn");
-            var msg = document.getElementById("message");
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbwH6kT_7xgH0YGytHLENKBmNY5yD34syaMwzFu_nlhbbBlxjZuic-KgOB4S37JSepE7/exec";
 
-            if(user === "" || pass === "") {
-                msg.innerHTML = "กรุณากรอกข้อมูลให้ครบถ้วน"; msg.style.color = "red"; return;
-            }
-
-            btn.innerHTML = "กำลังตรวจสอบ..."; btn.disabled = true;
-
-            google.script.run.withSuccessHandler(function(response) {
-                btn.innerHTML = "เข้าสู่ระบบ"; btn.disabled = false;
-
-                if (response.status === "success") {
-                    // 1. ซ่อนฟอร์ม Login และแสดง Dashboard
-                    document.getElementById("loginForm").style.display = "none";
-                    document.getElementById("dashboard").style.display = "block";
-                    
-                    // 2. ใส่ชื่อผู้ใช้
-                    document.getElementById("welcomeText").innerHTML = "ยินดีต้อนรับคุณ " + user;
-
-                    // 3. แยกเมนูตามสิทธิ์
-                    if(response.role === "admin") {
-                        document.getElementById("roleText").innerHTML = "สถานะ: ผู้ดูแลระบบ";
-                        document.getElementById("adminPanel").style.display = "block";
-                    } else if (response.role === "teacher") {
-                        document.getElementById("roleText").innerHTML = "สถานะ: อาจารย์ผู้ประเมิน";
-                        document.getElementById("teacherPanel").style.display = "block";
-                    }
-                } else {
-                    msg.style.color = "red"; msg.innerHTML = response.message;
-                }
-            }).verifyLogin(user, pass);
+        function saveData() {
+            const data = {
+                targetSheet: "Subjects",
+                rowData: [document.getElementById('subjName').value]
+            };
+            
+            fetch(webAppUrl, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            }).then(res => alert('บันทึกสำเร็จ!'));
+        }
+        
+        function showPage(pageName) {
+            // เขียน JS เพื่อสลับการแสดงผลหน้าจอ
         }
     </script>
-
 </body>
 </html>
