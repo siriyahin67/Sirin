@@ -1,129 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <style>
-    body { background-color: #f8f9fa; }
-    .card { margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box; /* ให้ padding ไม่ล้น */
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #message {
+            margin-top: 15px;
+            color: red;
+            font-weight: bold;
+        }
+    </style>
 </head>
-<body class="p-4">
-  <div class="container">
-    <h2 class="mb-4">ตั้งค่าระบบจัดการเกรด (API Version)</h2>
+<body>
 
-    <div class="card p-4">
-      <h4>1. จัดการกลุ่ม (เช่น ชั้นปี)</h4>
-      <div class="input-group mb-3">
-        <input type="text" id="groupName" class="form-control" placeholder="ระบุชื่อกลุ่มใหม่">
-        <button onclick="saveGroup()" class="btn btn-primary" id="btnGroup">บันทึกกลุ่ม</button>
-      </div>
+    <div class="login-container" id="loginForm">
+        <h2>ระบบจัดการเกรด<br>นิสิตแพทย์</h2>
+        <input type="text" id="username" placeholder="ชื่อผู้ใช้งาน (Username)">
+        <input type="password" id="password" placeholder="รหัสผ่าน (Password)">
+        <button onclick="doLogin()" id="loginBtn">เข้าสู่ระบบ</button>
+        <div id="message"></div>
     </div>
 
-    <div class="card p-4">
-      <h4>2. เพิ่มรายวิชา</h4>
-      <div class="mb-3">
-        <label class="form-label">เลือกกลุ่ม:</label>
-        <select id="groupSelect" class="form-select">
-          <option value="">-- กำลังโหลดกลุ่ม... --</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">ชื่อรายวิชา:</label>
-        <input type="text" id="subjectName" class="form-control" placeholder="เช่น อายุรศาสตร์ 1">
-      </div>
-      <button onclick="saveSubject()" class="btn btn-success" id="btnSubject">บันทึกรายวิชา</button>
-    </div>
-  </div>
+    <script>
+        function doLogin() {
+            var user = document.getElementById("username").value;
+            var pass = document.getElementById("password").value;
+            var btn = document.getElementById("loginBtn");
+            var msg = document.getElementById("message");
 
-  <script>
-    // ==========================================
-    // นำ URL ของ Web App มาวางที่ตัวแปรนี้
-    // ==========================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwH6kT_7xgH0YGytHLENKBmNY5yD34syaMwzFu_nlhbbBlxjZuic-KgOB4S37JSepE7/exec";
+            // ตรวจสอบเบื้องต้นว่ากรอกครบไหม
+            if(user === "" || pass === "") {
+                msg.innerHTML = "กรุณากรอกข้อมูลให้ครบถ้วน";
+                msg.style.color = "red";
+                return;
+            }
 
-    // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
-    window.onload = loadGroups;
+            // เปลี่ยนสถานะปุ่ม
+            btn.innerHTML = "กำลังตรวจสอบ...";
+            btn.disabled = true;
 
-    // ฟังก์ชันดึงข้อมูลกลุ่มด้วย GET
-    async function loadGroups() {
-      try {
-        const response = await fetch(WEB_APP_URL + "?action=getGroups");
-        const groups = await response.json();
-        
-        const select = document.getElementById('groupSelect');
-        select.innerHTML = '<option value="">-- เลือกกลุ่ม --</option>';
-        
-        if (groups.length === 0) {
-           select.innerHTML = '<option value="">ยังไม่มีข้อมูลกลุ่ม</option>';
-           return;
+            // ส่งข้อมูลไปหลังบ้าน (Code.gs)
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    btn.innerHTML = "เข้าสู่ระบบ";
+                    btn.disabled = false;
+
+                    if (response.status === "success") {
+                        msg.style.color = "green";
+                        msg.innerHTML = response.message;
+                        
+                        // สมมติว่าแยกหน้าตามสิทธิ์
+                        if(response.role === "admin") {
+                            alert("ยินดีต้อนรับ ผู้ดูแลระบบ (Admin) - โหลดหน้าตั้งค่า...");
+                            // โค้ดเปลี่ยนหน้าเว็บ หรือซ่อนหน้า Login โชว์หน้าแอดมินจะใส่ตรงนี้
+                        } else if (response.role === "teacher") {
+                            alert("ยินดีต้อนรับ อาจารย์ - โหลดหน้าลงคะแนน...");
+                            // โค้ดเปลี่ยนหน้าเว็บ หรือซ่อนหน้า Login โชว์หน้าอาจารย์จะใส่ตรงนี้
+                        }
+
+                    } else {
+                        msg.style.color = "red";
+                        msg.innerHTML = response.message;
+                    }
+                })
+                .verifyLogin(user, pass); // เรียกใช้ฟังก์ชันใน Code.gs
         }
-        
-        groups.forEach(group => {
-          select.innerHTML += `<option value="${group.id}">${group.name}</option>`;
-        });
-      } catch (error) {
-        console.error("โหลดข้อมูลไม่สำเร็จ:", error);
-      }
-    }
+    </script>
 
-    // ฟังก์ชันบันทึกกลุ่มด้วย POST
-    async function saveGroup() {
-      const name = document.getElementById('groupName').value;
-      if(!name) return alert('กรุณากรอกชื่อกลุ่ม');
-      
-      document.getElementById('btnGroup').innerText = "กำลังบันทึก...";
-
-      try {
-        const response = await fetch(WEB_APP_URL, {
-          method: "POST",
-          // ต้องใช้ text/plain เพื่อป้องกันปัญหา CORS Preflight
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "addGroup", groupName: name })
-        });
-        
-        const result = await response.json();
-        if(result.status === 'success') {
-          alert('บันทึกกลุ่มสำเร็จ!');
-          document.getElementById('groupName').value = '';
-          loadGroups(); // รีโหลดตัวเลือกกลุ่มใหม่
-        }
-      } catch (error) {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
-        console.error(error);
-      }
-      
-      document.getElementById('btnGroup').innerText = "บันทึกกลุ่ม";
-    }
-
-    // ฟังก์ชันบันทึกวิชาด้วย POST
-    async function saveSubject() {
-      const name = document.getElementById('subjectName').value;
-      const groupId = document.getElementById('groupSelect').value;
-      
-      if(!name || !groupId) return alert('กรุณากรอกข้อมูลให้ครบทั้งกลุ่มและชื่อรายวิชา');
-
-      document.getElementById('btnSubject').innerText = "กำลังบันทึก...";
-
-      try {
-        const response = await fetch(WEB_APP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "addSubject", subjectName: name, groupId: groupId })
-        });
-
-        const result = await response.json();
-        if(result.status === 'success') {
-          alert('บันทึกรายวิชาสำเร็จ!');
-          document.getElementById('subjectName').value = '';
-        }
-      } catch (error) {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
-        console.error(error);
-      }
-
-      document.getElementById('btnSubject').innerText = "บันทึกรายวิชา";
-    }
-  </script>
 </body>
 </html>
