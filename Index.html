@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ</title>
+    <title>ระบบจัดการเกรด</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -14,6 +14,7 @@
             height: 100vh;
             margin: 0;
         }
+        /* --- สไตล์ของหน้า Login (เหมือนเดิม) --- */
         .login-container {
             background-color: white;
             padding: 40px;
@@ -23,47 +24,66 @@
             max-width: 400px;
             text-align: center;
         }
-        h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
         input[type="text"], input[type="password"] {
             width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box; /* ให้ padding ไม่ล้น */
+            padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
         }
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 15px;
+            width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 15px;
         }
-        button:hover {
-            background-color: #2980b9;
+        button:hover { background-color: #2980b9; }
+        
+        /* --- สไตล์ของหน้า Dashboard (เพิ่มใหม่) --- */
+        #dashboard {
+            width: 100%; max-width: 800px; padding: 20px; align-self: flex-start; margin-top: 50px;
         }
-        #message {
-            margin-top: 15px;
-            color: red;
-            font-weight: bold;
+        .panel {
+            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 20px;
         }
+        .logout-btn {
+            background-color: #e74c3c; width: auto; padding: 8px 15px; margin-top: 0; float: right;
+        }
+        .logout-btn:hover { background-color: #c0392b; }
+        .menu-list {
+            list-style-type: none; padding: 0;
+        }
+        .menu-list li {
+            padding: 15px; background: #ecf0f1; margin-bottom: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; color: #2c3e50; transition: 0.3s;
+        }
+        .menu-list li:hover { background: #dcdde1; }
     </style>
 </head>
 <body>
 
     <div class="login-container" id="loginForm">
-        <h2>ระบบจัดการเกรด<br>นิสิตแพทย์</h2>
+        <h2 style="color: #2c3e50;">ระบบจัดการเกรด<br>นิสิตแพทย์</h2>
         <input type="text" id="username" placeholder="ชื่อผู้ใช้งาน (Username)">
         <input type="password" id="password" placeholder="รหัสผ่าน (Password)">
         <button onclick="doLogin()" id="loginBtn">เข้าสู่ระบบ</button>
-        <div id="message"></div>
+        <div id="message" style="margin-top: 15px; font-weight: bold;"></div>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <button class="logout-btn" onclick="location.reload()">ออกจากระบบ</button>
+        <h2 id="welcomeText" style="color: #2c3e50;">ยินดีต้อนรับ</h2>
+        <p id="roleText" style="color: #7f8c8d;"></p>
+
+        <div id="adminPanel" class="panel" style="display: none;">
+            <h3>🛠️ เมนูผู้ดูแลระบบ (Admin)</h3>
+            <ul class="menu-list">
+                <li>1. จัดการรายวิชาและกลุ่ม</li>
+                <li>2. ตั้งค่าเกณฑ์คะแนน (MPL / MAX)</li>
+                <li>3. อัปโหลดและจัดการรายชื่อนิสิต</li>
+            </ul>
+        </div>
+
+        <div id="teacherPanel" class="panel" style="display: none;">
+            <h3>👨‍🏫 รายวิชาที่รับผิดชอบ</h3>
+            <ul class="menu-list">
+                <li>📌 อายุรศาสตร์ (กลุ่ม A) - รอลงคะแนน</li>
+                <li>📌 ศัลยศาสตร์ (กลุ่ม B) - รอลงคะแนน</li>
+                </ul>
+        </div>
     </div>
 
     <script>
@@ -73,42 +93,35 @@
             var btn = document.getElementById("loginBtn");
             var msg = document.getElementById("message");
 
-            // ตรวจสอบเบื้องต้นว่ากรอกครบไหม
             if(user === "" || pass === "") {
-                msg.innerHTML = "กรุณากรอกข้อมูลให้ครบถ้วน";
-                msg.style.color = "red";
-                return;
+                msg.innerHTML = "กรุณากรอกข้อมูลให้ครบถ้วน"; msg.style.color = "red"; return;
             }
 
-            // เปลี่ยนสถานะปุ่ม
-            btn.innerHTML = "กำลังตรวจสอบ...";
-            btn.disabled = true;
+            btn.innerHTML = "กำลังตรวจสอบ..."; btn.disabled = true;
 
-            // ส่งข้อมูลไปหลังบ้าน (Code.gs)
-            google.script.run
-                .withSuccessHandler(function(response) {
-                    btn.innerHTML = "เข้าสู่ระบบ";
-                    btn.disabled = false;
+            google.script.run.withSuccessHandler(function(response) {
+                btn.innerHTML = "เข้าสู่ระบบ"; btn.disabled = false;
 
-                    if (response.status === "success") {
-                        msg.style.color = "green";
-                        msg.innerHTML = response.message;
-                        
-                        // สมมติว่าแยกหน้าตามสิทธิ์
-                        if(response.role === "admin") {
-                            alert("ยินดีต้อนรับ ผู้ดูแลระบบ (Admin) - โหลดหน้าตั้งค่า...");
-                            // โค้ดเปลี่ยนหน้าเว็บ หรือซ่อนหน้า Login โชว์หน้าแอดมินจะใส่ตรงนี้
-                        } else if (response.role === "teacher") {
-                            alert("ยินดีต้อนรับ อาจารย์ - โหลดหน้าลงคะแนน...");
-                            // โค้ดเปลี่ยนหน้าเว็บ หรือซ่อนหน้า Login โชว์หน้าอาจารย์จะใส่ตรงนี้
-                        }
+                if (response.status === "success") {
+                    // 1. ซ่อนฟอร์ม Login และแสดง Dashboard
+                    document.getElementById("loginForm").style.display = "none";
+                    document.getElementById("dashboard").style.display = "block";
+                    
+                    // 2. ใส่ชื่อผู้ใช้
+                    document.getElementById("welcomeText").innerHTML = "ยินดีต้อนรับคุณ " + user;
 
-                    } else {
-                        msg.style.color = "red";
-                        msg.innerHTML = response.message;
+                    // 3. แยกเมนูตามสิทธิ์
+                    if(response.role === "admin") {
+                        document.getElementById("roleText").innerHTML = "สถานะ: ผู้ดูแลระบบ";
+                        document.getElementById("adminPanel").style.display = "block";
+                    } else if (response.role === "teacher") {
+                        document.getElementById("roleText").innerHTML = "สถานะ: อาจารย์ผู้ประเมิน";
+                        document.getElementById("teacherPanel").style.display = "block";
                     }
-                })
-                .verifyLogin(user, pass); // เรียกใช้ฟังก์ชันใน Code.gs
+                } else {
+                    msg.style.color = "red"; msg.innerHTML = response.message;
+                }
+            }).verifyLogin(user, pass);
         }
     </script>
 
